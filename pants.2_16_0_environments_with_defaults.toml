@@ -1,0 +1,58 @@
+# Copyright 2020 Pants project contributors.
+# Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+[GLOBAL]
+pants_version = "2.16.0"
+
+process_execution_remote_parallelism = 4
+
+# Override the top-level BUILD file.
+build_patterns = [
+  "BUILD",
+  "environments_with_defaults.BUILD",
+]
+
+remote_execution = true
+remote_cache_read = true
+remote_cache_write = true
+remote_store_address = "grpc://frontend:8980"
+remote_execution_address = "grpc://frontend:8980"
+remote_instance_name = "simple-runner"
+remote_cache_rpc_timeout_millis=5000
+
+backend_packages = [
+  "pants.backend.python",
+  "pants.backend.python.lint.black",
+  "pants.backend.python.lint.flake8",
+]
+
+[source]
+root_patterns = [
+  "/"
+]
+
+[environments-preview.names]
+local = "//:local"
+remote = "//:remote"
+
+[python]
+interpreter_constraints = ["==3.9.*"]
+enable_resolves = true
+resolves_generate_lockfiles = false
+
+[python.resolves]
+python-default = "requirements.txt"
+
+[python-bootstrap]
+search_path = [
+  "<PYENV>",
+  "<PATH>",
+]
+
+[python-infer]
+imports = true
+init_files = "always"
+assets = true
+
+[anonymous-telemetry]
+enabled = false

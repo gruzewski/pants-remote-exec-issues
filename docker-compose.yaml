@@ -1,0 +1,141 @@
+version: '3'
+services:
+  frontend:
+    image: ghcr.io/buildbarn/bb-storage:20230905T110346Z-c04246b
+    platform: linux/amd64
+    command:
+      - /config/frontend.jsonnet
+    expose:
+      - 9980
+    ports:
+      - 8980:8980
+    volumes:
+      - ./config:/config
+
+  storage-setup:
+    image: busybox:latest
+    platform: linux/arm64/v8
+    command:
+      - sh
+      - -c
+      - mkdir -m 0700 -p /store_0/ac/persistent_state /store_1/ac/persistent_state /store_0/cas/persistent_state /store_1/cas/persistent_state
+    volumes:
+      - store_0:/store_0
+      - store_1:/store_1
+
+  storage-0:
+    image: ghcr.io/buildbarn/bb-storage:20230905T110346Z-c04246b
+    platform: linux/amd64
+    command:
+      - /config/storage.jsonnet
+    expose:
+      - 8981
+      - 9980
+    volumes:
+      - ./config:/config
+      - store_0:/storage
+    depends_on:
+      storage-setup:
+        condition: service_completed_successfully
+
+  storage-1:
+    image: ghcr.io/buildbarn/bb-storage:20230905T110346Z-c04246b
+    platform: linux/amd64
+    command:
+      - /config/storage.jsonnet
+    expose:
+      - 8981
+      - 9980
+    volumes:
+      - ./config:/config
+      - store_1:/storage
+    depends_on:
+      storage-setup:
+        condition: service_completed_successfully
+
+  scheduler:
+    image: ghcr.io/buildbarn/bb-scheduler:20230905T173453Z-70efb72
+    platform: linux/amd64
+    command:
+      - /config/scheduler.jsonnet
+    expose:
+      - 8982
+      - 8983
+      - 9980
+    ports:
+      - 7982:7982
+    volumes:
+      - ./config:/config
+
+  runner-installer:
+    image: ghcr.io/buildbarn/bb-runner-installer:20230905T173453Z-70efb72
+    platform: linux/amd64
+    volumes:
+      - bb:/bb
+
+  worker-setup:
+    image: busybox:latest
+    platform: linux/arm64/v8
+    command:
+      - sh
+      - -c
+      - mkdir -pm 0777 /worker/build && mkdir -pm 0777 /worker/cache && chmod 0777 /worker
+    volumes:
+      - worker:/worker:z
+
+  worker:
+    image: ghcr.io/buildbarn/bb-worker:20230905T173453Z-70efb72
+    platform: linux/amd64
+    command:
+      - /config/worker.jsonnet
+    volumes:
+      - ./config:/config
+      - worker:/worker:z
+    depends_on:
+      worker-setup:
+        condition: service_completed_successfully
+      scheduler:
+        condition: service_started
+      runner:
+        condition: service_started
+
+  runner:
+    image: python:3.9
+    platform: linux/amd64
+    entrypoint:
+      - /bin/bash
+    command:
+      - -c
+      - exec /bb/tini -v -- /bb/bb_runner /config/runner.jsonnet
+    volumes:
+      - ./config:/config
+      - bb:/bb
+      - worker:/worker:z
+    depends_on:
+      runner-installer:
+        condition: service_completed_successfully
+
+  pants:
+    image: python:3.9
+    platform: linux/amd64
+    entrypoint:
+      - /bin/bash
+    command:
+      - -c
+      - |
+        ./get-pants.sh
+        /root/.local/bin/pants --no-pantsd --no-watch-filesystem --print-stacktrace -ldebug test 'helloworld/::'
+    working_dir: /code
+    volumes:
+      - ./:/code
+      - pants_cache:/root/.cache
+    depends_on:
+      - frontend
+      - runner
+    
+volumes:
+  bb:
+  pants_cache:
+  store_0:
+  store_1:
+  worker:

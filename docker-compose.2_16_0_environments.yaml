@@ -1,0 +1,11 @@
+version: '3'
+services:
+  worker:
+    command:
+      - /config/worker_with_env_vars.jsonnet
+
+  pants:
+    volumes:
+      - ./:/code
+      - ./pants.2_16_0_environments.toml:/code/pants.toml
+      - pants_cache:/root/.cache

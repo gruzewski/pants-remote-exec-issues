@@ -1,0 +1,7 @@
+version: '3'
+services:
+  pants:
+    volumes:
+      - ./:/code
+      - ./pants.2_15_2_global.toml:/code/pants.toml
+      - pants_cache:/root/.cache
