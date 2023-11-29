@@ -442,6 +442,68 @@ looked like this:
 
 It provides directory to the untarred path.
 
+## Pants 2.17.1 with environments and defaults to remote environment and subprocess-envs
+
+```shell
+docker compose -f docker-compose.yaml -f docker-compose.2_17_1_environments_with_subprocess_envs.yaml up
+```
+
+This is an attempt, suggested on Pants' Slack, to remove BuildBarn's `PATH` hack. Unfortunately, it
+fails the same way.
+
+```console
+ 21:39:08.82 [DEBUG] Completed: run_execute_request
+ 21:39:08.82 [DEBUG] Completed: Scheduling: Extract environment variables from the remote execution environment
+ 21:39:08.82 [DEBUG] Completed: pants.backend.python.goals.pytest_runner.setup_pytest_for_target
+ 21:39:08.82 [DEBUG] Completed: pants.backend.python.goals.pytest_runner.setup_pytest_for_target
+ 21:39:08.82 [DEBUG] Completed: Run Pytest - (environment:remote, helloworld/greet/greeting_test.py:tests)
+ 21:39:08.83 [DEBUG] Completed: Run Pytest - (environment:remote, helloworld/translator/translator_test.py:tests)
+ 21:39:08.83 [DEBUG] Completed: `test` goal
+ 21:39:08.83 [DEBUG] computed 1 nodes in 0.534182 seconds. there are 214 total nodes.
+ 21:39:08.83 [ERROR] 1 Exception encountered:
+
+ Engine traceback:
+   in select
+     ..
+   in pants.core.goals.test.run_tests
+     `test` goal
+
+ Traceback (most recent call last):
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 626, in native_engine_generator_send
+     res = rule.send(arg) if err is None else rule.throw(throw or err)
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/core/goals/test.py", line 874, in run_tests
+     results = await MultiGet(
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 361, in MultiGet
+     return await _MultiGet(tuple(__arg0))
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 168, in __await__
+     result = yield self.gets
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 626, in native_engine_generator_send
+     res = rule.send(arg) if err is None else rule.throw(throw or err)
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/backend/python/goals/pytest_runner.py", line 468, in run_python_tests
+     setup = await Get(
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 118, in __await__
+     result = yield self
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 626, in native_engine_generator_send
+     res = rule.send(arg) if err is None else rule.throw(throw or err)
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/backend/python/goals/pytest_runner.py", line 468, in run_python_tests
+     setup = await Get(
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 118, in __await__
+     result = yield self
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 626, in native_engine_generator_send
+     res = rule.send(arg) if err is None else rule.throw(throw or err)
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/core/goals/test.py", line 1027, in get_filtered_environment
+     await Get(EnvironmentVars, EnvironmentVarsRequest(test_env_aware.extra_env_vars))
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 118, in __await__
+     result = yield self
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 626, in native_engine_generator_send
+     res = rule.send(arg) if err is None else rule.throw(throw or err)
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/platform_rules.py", line 74, in complete_environment_vars
+     env_process_result = await Get(
+   File "/root/.cache/nce/3d6643e46b53e4cc0b2a0d5c768866226ddce3de1f57f80c4a02d8d39800fa8e/bindings/venvs/2.17.1/lib/python3.9/site-packages/pants/engine/internals/selectors.py", line 118, in __await__
+     result = yield self
+ native_engine.IntrinsicError: For action Digest { hash: Fingerprint<b1f34b2bd7dc6bfab59b33fe0729a8d2b1b25c7e7f2bd1cb087f2f187c910c48>, size_bytes: 139 }: Error from remote execution: InvalidArgument: "Failed to run command: Cannot find executable \"env\" in search paths \"\""
+```
+
 ## Cleanup
 
 Run the cleanup step to remove all created Docker volumes.
